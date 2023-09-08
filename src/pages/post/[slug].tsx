@@ -1,6 +1,7 @@
 import { PortableText } from '@portabletext/react'
 import type { GetStaticProps, InferGetStaticPropsType } from 'next'
 import Image from 'next/image'
+import { getImageDimensions } from '@sanity/asset-utils'
 import { useLiveQuery } from 'next-sanity/preview'
 
 import Container from '~/components/Container'
@@ -51,6 +52,38 @@ export default function ProjectSlugRoute(
     slug: props.post.slug.current,
   })
 
+  const SampleImageComponent = ({ value, isInline }) => {
+    console.log('in', value, isInline)
+    const { width, height } = getImageDimensions(value)
+    return (
+      <img
+        src={urlForImage(value)
+          .width(isInline ? 100 : 800)
+          .fit('max')
+          .auto('format')
+          .url()}
+        width="100%"
+        height="auto"
+        alt={value.alt || ' '}
+        loading="lazy"
+        style={{
+          // Display alongside text if image appears inside a block text span
+          display: isInline ? 'inline-block' : 'block',
+
+          // Avoid jumping around with aspect-ratio CSS property
+          aspectRatio: width / height,
+        }}
+      />
+    )
+  }
+  const components = {
+    types: {
+      image: SampleImageComponent,
+      // Any other custom types you have in your content
+      // Examples: mapLocation, contactForm, code, featuredProjects, latestNews, etc.
+    },
+  }
+
   return (
     <Container>
       <section className="post">
@@ -70,7 +103,7 @@ export default function ProjectSlugRoute(
           <p className="post__excerpt">{post.excerpt}</p>
           <p className="post__date">{formatDate(post._createdAt)}</p>
           <div className="post__content">
-            <PortableText value={post.body} />
+            <PortableText value={post.body} components={components} />
           </div>
         </div>
       </section>
